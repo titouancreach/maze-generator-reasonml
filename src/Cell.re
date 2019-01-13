@@ -5,6 +5,7 @@ type t = {
   north: bool,
   south: bool,
   last: bool,
+  first: bool,
 };
 
 let defaultCell = {
@@ -14,6 +15,7 @@ let defaultCell = {
   north: true,
   south: true,
   last: false,
+  first: false,
 };
 
 let removeWall = (cell: t, dir: Direction.t) => {
@@ -30,7 +32,13 @@ let getStyle = (cell: t, cellSize: int) => {
   let noBorder = "1px solid red";
 
   let size = string_of_int(cellSize) ++ "px";
-  let color = cell.last ? "green" : cell.visited ? "red" : "blue";
+  let color =
+    switch (cell) {
+    | {last: true} => "green"
+    | {first: true} => "yellow"
+    | {visited: true} => "red"
+    | _ => "blue"
+    };
   let rightBorder = cell.east ? solidBorder : noBorder;
   let bottomBorder = cell.south ? solidBorder : noBorder;
   let leftBorder = cell.west ? solidBorder : noBorder;

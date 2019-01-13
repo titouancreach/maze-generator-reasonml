@@ -51,6 +51,12 @@ let setIsOutput = (board, (x, y): point) => {
   board;
 };
 
+let setIsFirst = (board, (x, y): point) => {
+  let v = getCell(board, x, y);
+  setCell(board, x, y, {...v, first: true});
+  board;
+};
+
 let findDirection = ((currX, currY), (choosenX, choosenY)) => {
   let xDiff = currX - choosenX;
   let yDiff = currY - choosenY;
@@ -159,11 +165,16 @@ let make = _children => {
           },
       );
     | Generate =>
+      let startX = Random.int(state.cols);
+      let startY = Random.int(state.rows);
       ReasonReact.UpdateWithSideEffects(
         {
           ...state,
           isGenerating: true,
-          board: makeEmptyBoard(state.cols, state.rows),
+          board:
+            makeEmptyBoard(state.cols, state.rows)
+            ->setIsFirst((startX, startY)),
+          curr: (startX, startY),
         },
         self =>
           id :=
@@ -173,7 +184,7 @@ let make = _children => {
                 state.speed,
               ),
             ),
-      )
+      );
     | SpeedChange(n) =>
       ReasonReact.Update({...state, speed: int_of_string(n)})
     },
@@ -234,7 +245,7 @@ let make = _children => {
             <input
               id="rowSize"
               type_="number"
-              min=4
+              min=5 /* 4 borders of 1px + 1px */
               value={string_of_int(self.state.cellSize)}
               onChange={event =>
                 self.send(
