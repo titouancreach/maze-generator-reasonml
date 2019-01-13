@@ -1,7 +1,3 @@
-let makeEmptyBoard = (cols, rows) => {
-  ArrayLabels.make_matrix(~dimx=rows, ~dimy=cols, Cell.defaultCell);
-};
-
 type timerId = ref(option(Js.Global.intervalId));
 
 let id: timerId = ref(None);
@@ -12,97 +8,9 @@ type state = {
   rows: int,
   cols: int,
   cellSize: int,
-  board: array(array(Cell.t)),
   isGenerating: bool,
-  curr: point,
-  stack: list(point),
   speed: int,
-};
-let getCell = (board, x, y) => {
-  ArrayLabels.get(ArrayLabels.get(board, y), x);
-};
-let getNeighbours = (cols, rows, curr) => {
-  let (x, y) = curr;
-  [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-  |> List.filter(((x, y)) => x >= 0 && x < cols && y >= 0 && y < rows);
-};
-let neighboursThatHasntBeVisited =
-    (board: array(array(Cell.t)), cols: int, rows: int, curr: point) => {
-  let neightbours = getNeighbours(cols, rows, curr);
-  neightbours
-  |> List.filter(((x, y)) => {
-       let cell = getCell(board, x, y);
-       !cell.visited;
-     });
-};
-
-let setCell = (board, x, y, newCell: Cell.t) => {
-  ArrayLabels.set(ArrayLabels.get(board, y), x, newCell);
-};
-
-let setHasVisited = (board, (x, y): point) => {
-  let v = getCell(board, x, y);
-  setCell(board, x, y, {...v, visited: true});
-};
-
-let setIsOutput = (board, (x, y): point) => {
-  let v = getCell(board, x, y);
-  setCell(board, x, y, {...v, last: true});
-  board;
-};
-
-let setIsFirst = (board, (x, y): point) => {
-  let v = getCell(board, x, y);
-  setCell(board, x, y, {...v, first: true});
-  board;
-};
-
-let findDirection = ((currX, currY), (choosenX, choosenY)) => {
-  let xDiff = currX - choosenX;
-  let yDiff = currY - choosenY;
-  switch (xDiff) {
-  | (-1) => (Direction.East, Direction.West)
-  | 1 => (Direction.West, Direction.East)
-  | 0 =>
-    switch (yDiff) {
-    | 1 => (Direction.North, Direction.South)
-    | (-1) => (Direction.South, Direction.North)
-    | y => failwith("the diff in y is: " ++ string_of_int(y))
-    }
-  | x => failwith("the diff in x is: " ++ string_of_int(x))
-  };
-};
-
-let removeWall = (board, (x, y), dir) => {
-  let cell = getCell(board, x, y);
-  let withoutWall = Cell.removeWall(cell, dir);
-  setCell(board, x, y, withoutWall);
-  board;
-};
-
-let rec generator = (board, cols, rows, curr: point, stack, lastDiscovered) => {
-  setHasVisited(board, curr); /* Mark the current cell as visited */
-  let neightbours = neighboursThatHasntBeVisited(board, cols, rows, curr);
-  if (List.length(neightbours) == 0) {
-    switch (stack) {
-    | [lastCell, ...newStack] =>
-      generator(board, cols, rows, lastCell, newStack, lastDiscovered)
-    | _ =>
-      let newBoard = setIsOutput(board, lastDiscovered);
-      (newBoard, curr, stack, true, lastDiscovered);
-    };
-  } else {
-    let random = Random.int(List.length(neightbours));
-    let choosenNeighbour = List.nth(neightbours, random);
-    let newStack = [curr, ...stack];
-    /* remove wall between the current cell and the choosenNeightbour */
-    let (dirCurrent, dirChoosen) = findDirection(curr, choosenNeighbour);
-    let newBoard =
-      board
-      ->removeWall(curr, dirCurrent)
-      ->removeWall(choosenNeighbour, dirChoosen);
-    (newBoard, choosenNeighbour, newStack, false, choosenNeighbour);
-  };
+  board: Board.t,
 };
 
 type action =
@@ -120,11 +28,9 @@ let make = _children => {
   initialState: () => {
     rows: 20,
     cols: 20,
-    board: makeEmptyBoard(20, 20),
+    board: Board.make(20, 20),
     cellSize: 25,
     isGenerating: false,
-    curr: (0, 0),
-    stack: [],
     speed: 25,
   },
 
@@ -134,28 +40,26 @@ let make = _children => {
       ReasonReact.Update({
         ...state,
         cols: int_of_string(x),
-        board: makeEmptyBoard(int_of_string(x), state.rows),
+        board: Board.make(int_of_string(x), state.rows),
       })
     | NumberRowChange(y) =>
       ReasonReact.Update({
         ...state,
         rows: int_of_string(y),
-        board: makeEmptyBoard(state.cols, int_of_string(y)),
+        board: Board.make(state.cols, int_of_string(y)),
       })
     | CellSizeChange(n) =>
       ReasonReact.Update({...state, cellSize: int_of_string(n)})
     | GenerationTick =>
-      let (board, curr, stack, finished, _) =
-        generator(
+      let (board, finished, _) =
+        Board.generator(
           state.board,
           state.cols,
           state.rows,
-          state.curr,
-          state.stack,
-          state.curr,
+          state.board.curr,
         );
       ReasonReact.UpdateWithSideEffects(
-        {...state, board, curr, stack, isGenerating: !finished},
+        {...state, board, isGenerating: !finished},
         _self =>
           if (finished) {
             switch (id^) {
@@ -172,9 +76,8 @@ let make = _children => {
           ...state,
           isGenerating: true,
           board:
-            makeEmptyBoard(state.cols, state.rows)
-            ->setIsFirst((startX, startY)),
-          curr: (startX, startY),
+            Board.make(state.cols, state.rows, ~curr=(startX, startY))
+            ->Board.setIsFirst((startX, startY)),
         },
         self =>
           id :=
@@ -256,6 +159,29 @@ let make = _children => {
           </label>
         </div>
         <div>
+          <span>
+            {ReasonReact.string(
+               "Completed: "
+               ++ string_of_int(
+                    Board.getPercentageGenerated(
+                      self.state.board,
+                      self.state.cols,
+                      self.state.rows,
+                    ),
+                  )
+               ++ "%",
+             )}
+          </span>
+        </div>
+        <div>
+          <span>
+            {ReasonReact.string(
+               "Stack size (backtracking) :"
+               ++ string_of_int(Board.getStackSize(self.state.board)),
+             )}
+          </span>
+        </div>
+        <div>
           <button
             onClick={_event => self.send(Generate)}
             disabled={self.state.isGenerating}>
@@ -263,6 +189,6 @@ let make = _children => {
           </button>
         </div>
       </div>
-      <Maze board={self.state.board} cellSize={self.state.cellSize} />
+      <Maze board={self.state.board.board} cellSize={self.state.cellSize} />
     </div>,
 };
