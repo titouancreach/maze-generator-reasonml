@@ -100,24 +100,15 @@ let removeWall = (board: t, (x, y): Point.t, dir: Direction.t) => {
   setCell(board, x, y, withoutWall);
 };
 
-let rec generator =
-        (board: t, cols: int, rows: int, lastDiscovered: Point.t)
-        : (t, bool, Point.t) => {
+let rec generator = (board: t, cols: int, rows: int): (t, bool) => {
   setHasVisited(board, board.curr) |> ignore; /* Mark the current cell as visited */
   let neightbours =
     neighboursThatHasntBeVisited(board, cols, rows, board.curr);
   if (List.length(neightbours) == 0) {
     switch (board.stack) {
     | [lastCell, ...newStack] =>
-      generator(
-        {...board, curr: lastCell, stack: newStack},
-        cols,
-        rows,
-        lastDiscovered,
-      )
-    | _ =>
-      let newBoard = setIsOutput(board, lastDiscovered);
-      (newBoard, true, lastDiscovered);
+      generator({...board, curr: lastCell, stack: newStack}, cols, rows)
+    | _ => (board, true)
     };
   } else {
     let random = Random.int(List.length(neightbours));
@@ -130,10 +121,6 @@ let rec generator =
       board
       ->removeWall(board.curr, dirCurrent)
       ->removeWall(choosenNeighbour, dirChoosen);
-    (
-      {...newBoard, stack: newStack, curr: choosenNeighbour},
-      false,
-      choosenNeighbour,
-    );
+    ({...newBoard, stack: newStack, curr: choosenNeighbour}, false);
   };
 };

@@ -49,13 +49,8 @@ let make = _children => {
     | CellSizeChange(n) =>
       ReasonReact.Update({...state, cellSize: int_of_string(n)})
     | GenerationTick =>
-      let (board, finished, _) =
-        Board.generator(
-          state.board,
-          state.cols,
-          state.rows,
-          state.board.curr,
-        );
+      let (board, finished) =
+        Board.generator(state.board, state.cols, state.rows);
       ReasonReact.UpdateWithSideEffects(
         {...state, board, isGenerating: !finished},
         _self =>
