@@ -112,7 +112,7 @@ let make = _children => {
             {ReasonReact.string("Number of columns")}
             <input
               id="number_column"
-              min=0
+              min=1
               type_="number"
               value={string_of_int(self.state.cols)}
               onChange={event =>
@@ -128,7 +128,7 @@ let make = _children => {
             {ReasonReact.string("Number of rows")}
             <input
               id="number_row"
-              min=0
+              min=1
               type_="number"
               value={string_of_int(self.state.rows)}
               onChange={event =>
@@ -145,7 +145,7 @@ let make = _children => {
             <input
               id="rowSize"
               type_="number"
-              min=5 /* 4 borders of 1px + 1px */
+              min=5
               value={string_of_int(self.state.cellSize)}
               onChange={event =>
                 self.send(
