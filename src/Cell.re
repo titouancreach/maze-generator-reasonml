@@ -18,6 +18,12 @@ let defaultCell = {
   first: false,
 };
 
+let colorVisited = "#068587";
+let colorLast = "#ED553B";
+let colorFirst = "#F2B134";
+let colorDefault = "#4FB99F";
+let colorWall = "#000";
+
 let removeWall = (cell: t, dir: Direction.t) => {
   switch (dir) {
   | Direction.East => {...cell, east: false}
@@ -28,16 +34,16 @@ let removeWall = (cell: t, dir: Direction.t) => {
 };
 
 let getStyle = (cell: t, cellSize: int) => {
-  let solidBorder = "1px solid #000";
-  let noBorder = "1px solid red";
+  let solidBorder = {j|1px solid $colorWall|j};
+  let noBorder = {j|1px solid $colorVisited|j};
 
   let size = string_of_int(cellSize) ++ "px";
   let color =
     switch (cell) {
-    | {last: true} => "green"
-    | {first: true} => "yellow"
-    | {visited: true} => "red"
-    | _ => "blue"
+    | {last: true} => colorLast
+    | {first: true} => colorFirst
+    | {visited: true} => colorVisited
+    | _ => colorDefault
     };
   let rightBorder = cell.east ? solidBorder : noBorder;
   let bottomBorder = cell.south ? solidBorder : noBorder;
