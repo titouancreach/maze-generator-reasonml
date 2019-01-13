@@ -1,5 +1,7 @@
 # maze
 
+https://titouancreach.github.io/maze-generator-reasonml/
+
 ## Run Project
 
 ```sh
