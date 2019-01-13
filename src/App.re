@@ -83,6 +83,8 @@ let make = _children => {
           ...state,
           isGenerating: true,
           board: Board.make(state.cols, state.rows, ~curr=(startX, startY)),
+          currentStackSize: 0,
+          maxStackSize: 0,
         },
         self =>
           id :=
