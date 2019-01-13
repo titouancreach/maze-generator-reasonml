@@ -16,6 +16,7 @@ type state = {
   isGenerating: bool,
   curr: point,
   stack: list(point),
+  speed: int,
 };
 let getCell = (board, x, y) => {
   ArrayLabels.get(ArrayLabels.get(board, y), x);
@@ -44,6 +45,12 @@ let setHasVisited = (board, (x, y): point) => {
   setCell(board, x, y, {...v, visited: true});
 };
 
+let setIsOutput = (board, (x, y): point) => {
+  let v = getCell(board, x, y);
+  setCell(board, x, y, {...v, last: true});
+  board;
+};
+
 let findDirection = ((currX, currY), (choosenX, choosenY)) => {
   let xDiff = currX - choosenX;
   let yDiff = currY - choosenY;
@@ -64,16 +71,19 @@ let removeWall = (board, (x, y), dir) => {
   let cell = getCell(board, x, y);
   let withoutWall = Cell.removeWall(cell, dir);
   setCell(board, x, y, withoutWall);
+  board;
 };
 
-let rec generator = (board, cols, rows, curr: point, stack) => {
+let rec generator = (board, cols, rows, curr: point, stack, lastDiscovered) => {
   setHasVisited(board, curr); /* Mark the current cell as visited */
   let neightbours = neighboursThatHasntBeVisited(board, cols, rows, curr);
   if (List.length(neightbours) == 0) {
     switch (stack) {
     | [lastCell, ...newStack] =>
-      generator(board, cols, rows, lastCell, newStack)
-    | _ => (board, curr, stack, true)
+      generator(board, cols, rows, lastCell, newStack, lastDiscovered)
+    | _ =>
+      let newBoard = setIsOutput(board, lastDiscovered);
+      (newBoard, curr, stack, true, lastDiscovered);
     };
   } else {
     let random = Random.int(List.length(neightbours));
@@ -81,16 +91,19 @@ let rec generator = (board, cols, rows, curr: point, stack) => {
     let newStack = [curr, ...stack];
     /* remove wall between the current cell and the choosenNeightbour */
     let (dirCurrent, dirChoosen) = findDirection(curr, choosenNeighbour);
-    removeWall(board, curr, dirCurrent);
-    removeWall(board, choosenNeighbour, dirChoosen);
-    (board, choosenNeighbour, newStack, false);
+    let newBoard =
+      board
+      ->removeWall(curr, dirCurrent)
+      ->removeWall(choosenNeighbour, dirChoosen);
+    (newBoard, choosenNeighbour, newStack, false, choosenNeighbour);
   };
 };
 
 type action =
   | NumberRowChange(string)
   | NumberColChange(string)
-  | CellSizeChange(int)
+  | SpeedChange(string)
+  | CellSizeChange(string)
   | GenerationTick
   | Generate;
 
@@ -106,6 +119,7 @@ let make = _children => {
     isGenerating: false,
     curr: (0, 0),
     stack: [],
+    speed: 25,
   },
 
   reducer: (action, state) =>
@@ -122,15 +136,17 @@ let make = _children => {
         rows: int_of_string(y),
         board: makeEmptyBoard(state.cols, int_of_string(y)),
       })
-    | CellSizeChange(n) => ReasonReact.Update({...state, cellSize: n})
+    | CellSizeChange(n) =>
+      ReasonReact.Update({...state, cellSize: int_of_string(n)})
     | GenerationTick =>
-      let (board, curr, stack, finished) =
+      let (board, curr, stack, finished, _) =
         generator(
           state.board,
           state.cols,
           state.rows,
           state.curr,
           state.stack,
+          state.curr,
         );
       ReasonReact.UpdateWithSideEffects(
         {...state, board, curr, stack, isGenerating: !finished},
@@ -151,8 +167,15 @@ let make = _children => {
         },
         self =>
           id :=
-            Some(Js.Global.setInterval(() => self.send(GenerationTick), 25)),
+            Some(
+              Js.Global.setInterval(
+                () => self.send(GenerationTick),
+                state.speed,
+              ),
+            ),
       )
+    | SpeedChange(n) =>
+      ReasonReact.Update({...state, speed: int_of_string(n)})
     },
 
   render: self =>
@@ -160,10 +183,25 @@ let make = _children => {
       {ReasonReact.string("Maze generator and resolver")}
       <div>
         <div>
+          <label htmlFor="number_speed">
+            {ReasonReact.string("Speed (interval between 2 redraw)")}
+            <input
+              id="number_speed"
+              min=0
+              type_="number"
+              value={string_of_int(self.state.speed)}
+              onChange={event =>
+                self.send(SpeedChange(ReactEvent.Form.target(event)##value))
+              }
+            />
+          </label>
+        </div>
+        <div>
           <label htmlFor="number_column">
             {ReasonReact.string("Number of columns")}
             <input
               id="number_column"
+              min=0
               type_="number"
               value={string_of_int(self.state.cols)}
               onChange={event =>
@@ -179,6 +217,7 @@ let make = _children => {
             {ReasonReact.string("Number of rows")}
             <input
               id="number_row"
+              min=0
               type_="number"
               value={string_of_int(self.state.rows)}
               onChange={event =>
@@ -195,6 +234,7 @@ let make = _children => {
             <input
               id="rowSize"
               type_="number"
+              min=4
               value={string_of_int(self.state.cellSize)}
               onChange={event =>
                 self.send(
