@@ -191,7 +191,7 @@ let make = _children => {
 
   render: self =>
     <div>
-      {ReasonReact.string("Maze generator and resolver")}
+      {ReasonReact.string("Maze generator")}
       <div>
         <div>
           <label htmlFor="number_speed">
