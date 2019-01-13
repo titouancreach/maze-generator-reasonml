@@ -2,8 +2,6 @@ type timerId = ref(option(Js.Global.intervalId));
 
 let id: timerId = ref(None);
 
-type point = (int, int);
-
 type state = {
   rows: int,
   cols: int,
