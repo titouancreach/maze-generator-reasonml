@@ -2,18 +2,18 @@ type board = array(array(Cell.t));
 type t = {
   board,
   curr: Point.t,
-  stack: list(Point.t),
+  stack: Stack.t(Point.t),
 };
 
 let make = (~curr=(0, 0), cols: int, rows: int): t => {
   {
     board: ArrayLabels.make_matrix(~dimx=rows, ~dimy=cols, Cell.defaultCell),
     curr,
-    stack: [],
+    stack: Stack.create(),
   };
 };
 
-let getStackSize = (board: t): int => List.length(board.stack);
+let getStackSize = (board: t): int => Stack.length(board.stack);
 
 let getPercentageGenerated = (board: t, cols: int, rows: int): int => {
   let totalVisited =
@@ -104,22 +104,23 @@ let rec generator = (board: t, cols: int, rows: int): (t, bool) => {
   let neightbours =
     neighboursThatHasntBeVisited(board, cols, rows, board.curr);
   if (List.length(neightbours) == 0) {
-    switch (board.stack) {
-    | [lastCell, ...newStack] =>
-      generator({...board, curr: lastCell, stack: newStack}, cols, rows)
+    switch (Stack.is_empty(board.stack)) {
+    | false =>
+      let lastPosition = Stack.pop(board.stack);
+      generator({...board, curr: lastPosition}, cols, rows);
     | _ => (board, true)
     };
   } else {
     let random = Random.int(List.length(neightbours));
     let choosenNeighbour = List.nth(neightbours, random);
-    let newStack = [board.curr, ...board.stack];
+    Stack.push(board.curr, board.stack);
     /* remove wall between the current cell and the choosenNeightbour */
     let (dirCurrent, dirChoosen) =
       findDirection(board.curr, choosenNeighbour);
-    let newBoard =
+    let board =
       board
       ->removeWall(board.curr, dirCurrent)
       ->removeWall(choosenNeighbour, dirChoosen);
-    ({...newBoard, stack: newStack, curr: choosenNeighbour}, false);
+    ({...board, curr: choosenNeighbour}, false);
   };
 };
