@@ -11,6 +11,9 @@ type state = {
   board: Board.t,
   maxStackSize: int,
   currentStackSize: int,
+  fps: int,
+  totalTick: int,
+  firstRendering: option(float),
 };
 
 type action =
@@ -34,6 +37,9 @@ let make = _children => {
     speed: 25,
     maxStackSize: 0,
     currentStackSize: 0,
+    fps: 0,
+    totalTick: 0,
+    firstRendering: None,
   },
 
   reducer: (action, state) =>
@@ -53,6 +59,16 @@ let make = _children => {
     | CellSizeChange(n) =>
       ReasonReact.Update({...state, cellSize: int_of_string(n)})
     | GenerationTick =>
+      let totalTick = state.totalTick + 1;
+      let tickPerSecond =
+        switch (state.firstRendering) {
+        | Some(date) =>
+          float_of_int(totalTick)
+          /. (Js.Date.now() -. date)
+          *. 1000.
+          |> int_of_float
+        | None => failwith("Generation tick has been called before Generate")
+        };
       let (board, finished) =
         Board.generator(state.board, state.cols, state.rows);
       let stackSize = Board.getStackSize(board);
@@ -66,6 +82,8 @@ let make = _children => {
           isGenerating: !finished,
           currentStackSize: stackSize,
           maxStackSize,
+          totalTick,
+          fps: tickPerSecond,
         },
         _self =>
           if (finished) {
@@ -85,6 +103,9 @@ let make = _children => {
           board: Board.make(state.cols, state.rows, ~curr=(startX, startY)),
           currentStackSize: 0,
           maxStackSize: 0,
+          fps: 0,
+          totalTick: 0,
+          firstRendering: Some(Js.Date.now()),
         },
         self =>
           id :=
@@ -179,8 +200,7 @@ let make = _children => {
                ++ "%",
              )}
           </span>
-        </div>
-        <div>
+          <span> {ReasonReact.string("|")} </span>
           <span>
             {ReasonReact.string(
                "Stack size (backtracking): "
@@ -189,6 +209,10 @@ let make = _children => {
                ++ string_of_int(self.state.maxStackSize)
                ++ ")",
              )}
+          </span>
+          <span> {ReasonReact.string("|")} </span>
+          <span>
+            {ReasonReact.string("fps: " ++ string_of_int(self.state.fps))}
           </span>
         </div>
         <div>
