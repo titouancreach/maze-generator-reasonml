@@ -200,8 +200,7 @@ let make = _children => {
                ++ "%",
              )}
           </span>
-        </div>
-        <div>
+          <span> {ReasonReact.string("|")} </span>
           <span>
             {ReasonReact.string(
                "Stack size (backtracking): "
@@ -211,8 +210,7 @@ let make = _children => {
                ++ ")",
              )}
           </span>
-        </div>
-        <div>
+          <span> {ReasonReact.string("|")} </span>
           <span>
             {ReasonReact.string("fps: " ++ string_of_int(self.state.fps))}
           </span>
