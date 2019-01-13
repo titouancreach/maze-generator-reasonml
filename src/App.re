@@ -9,6 +9,8 @@ type state = {
   isGenerating: bool,
   speed: int,
   board: Board.t,
+  maxStackSize: int,
+  currentStackSize: int,
 };
 
 type action =
@@ -30,6 +32,8 @@ let make = _children => {
     cellSize: 25,
     isGenerating: false,
     speed: 25,
+    maxStackSize: 0,
+    currentStackSize: 0,
   },
 
   reducer: (action, state) =>
@@ -51,6 +55,8 @@ let make = _children => {
     | GenerationTick =>
       let (board, finished) =
         Board.generator(state.board, state.cols, state.rows);
+      let stackSize = Board.getStackSize(board);
+      let maxStackSize = max(stackSize, state.maxStackSize);
       ReasonReact.UpdateWithSideEffects(
         {
           ...state,
@@ -58,6 +64,8 @@ let make = _children => {
             finished ?
               Board.setEntranceAndExit(board, state.cols, state.rows) : board,
           isGenerating: !finished,
+          currentStackSize: stackSize,
+          maxStackSize,
         },
         _self =>
           if (finished) {
@@ -91,7 +99,7 @@ let make = _children => {
 
   render: self =>
     <div>
-      {ReasonReact.string("Maze generator")}
+      <h1> {ReasonReact.string("Maze generator")} </h1>
       <div>
         <div>
           <label htmlFor="number_speed">
@@ -173,8 +181,11 @@ let make = _children => {
         <div>
           <span>
             {ReasonReact.string(
-               "Stack size (backtracking) :"
-               ++ string_of_int(Board.getStackSize(self.state.board)),
+               "Stack size (backtracking): "
+               ++ string_of_int(self.state.currentStackSize)
+               ++ " (max: "
+               ++ string_of_int(self.state.maxStackSize)
+               ++ ")",
              )}
           </span>
         </div>
