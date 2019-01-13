@@ -52,7 +52,13 @@ let make = _children => {
       let (board, finished) =
         Board.generator(state.board, state.cols, state.rows);
       ReasonReact.UpdateWithSideEffects(
-        {...state, board, isGenerating: !finished},
+        {
+          ...state,
+          board:
+            finished ?
+              Board.setEntranceAndExit(board, state.cols, state.rows) : board,
+          isGenerating: !finished,
+        },
         _self =>
           if (finished) {
             switch (id^) {
@@ -68,9 +74,7 @@ let make = _children => {
         {
           ...state,
           isGenerating: true,
-          board:
-            Board.make(state.cols, state.rows, ~curr=(startX, startY))
-            ->Board.setIsFirst((startX, startY)),
+          board: Board.make(state.cols, state.rows, ~curr=(startX, startY)),
         },
         self =>
           id :=

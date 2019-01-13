@@ -66,14 +66,13 @@ let setHasVisited = (board, (x, y): Point.t): t => {
   setCell(board, x, y, {...v, visited: true});
 };
 
-let setIsOutput = (board, (x, y): Point.t): t => {
-  let v = getCell(board, x, y);
-  setCell(board, x, y, {...v, last: true});
-};
+let setEntranceAndExit = (board: t, cols: int, rows: int): t => {
+  let entrance = getCell(board, 0, 0);
+  let exit = getCell(board, cols - 1, rows - 1);
 
-let setIsFirst = (board: t, (x, y): Point.t): t => {
-  let v = getCell(board, x, y);
-  setCell(board, x, y, {...v, first: true});
+  board
+  ->setCell(0, 0, {...entrance, first: true})
+  ->setCell(cols - 1, rows - 1, {...exit, last: true});
 };
 
 let findDirection =
