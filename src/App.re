@@ -145,6 +145,54 @@ let make = _children => {
             />
           </label>
         </div>
+        <div>
+          <label htmlFor="number_column">
+            {ReasonReact.string("Number of columns")}
+            <input
+              id="number_column"
+              min=1
+              type_="number"
+              value={string_of_int(self.state.cols)}
+              onChange={event =>
+                self.send(
+                  NumberColChange(ReactEvent.Form.target(event)##value),
+                )
+              }
+            />
+          </label>
+        </div>
+        <div>
+          <label htmlFor="number_row">
+            {ReasonReact.string("Number of rows")}
+            <input
+              id="number_row"
+              min=1
+              type_="number"
+              value={string_of_int(self.state.rows)}
+              onChange={event =>
+                self.send(
+                  NumberRowChange(ReactEvent.Form.target(event)##value),
+                )
+              }
+            />
+          </label>
+        </div>
+        <div>
+          <label htmlFor="rowSize">
+            {ReasonReact.string("Size of a cell")}
+            <input
+              id="rowSize"
+              type_="number"
+              min=5
+              value={string_of_int(self.state.cellSize)}
+              onChange={event =>
+                self.send(
+                  CellSizeChange(ReactEvent.Form.target(event)##value),
+                )
+              }
+            />
+          </label>
+        </div>
         {self.state.preview ?
            <>
              <div>
@@ -158,54 +206,6 @@ let make = _children => {
                    onChange={event =>
                      self.send(
                        SpeedChange(ReactEvent.Form.target(event)##value),
-                     )
-                   }
-                 />
-               </label>
-             </div>
-             <div>
-               <label htmlFor="number_column">
-                 {ReasonReact.string("Number of columns")}
-                 <input
-                   id="number_column"
-                   min=1
-                   type_="number"
-                   value={string_of_int(self.state.cols)}
-                   onChange={event =>
-                     self.send(
-                       NumberColChange(ReactEvent.Form.target(event)##value),
-                     )
-                   }
-                 />
-               </label>
-             </div>
-             <div>
-               <label htmlFor="number_row">
-                 {ReasonReact.string("Number of rows")}
-                 <input
-                   id="number_row"
-                   min=1
-                   type_="number"
-                   value={string_of_int(self.state.rows)}
-                   onChange={event =>
-                     self.send(
-                       NumberRowChange(ReactEvent.Form.target(event)##value),
-                     )
-                   }
-                 />
-               </label>
-             </div>
-             <div>
-               <label htmlFor="rowSize">
-                 {ReasonReact.string("Size of a cell")}
-                 <input
-                   id="rowSize"
-                   type_="number"
-                   min=5
-                   value={string_of_int(self.state.cellSize)}
-                   onChange={event =>
-                     self.send(
-                       CellSizeChange(ReactEvent.Form.target(event)##value),
                      )
                    }
                  />
