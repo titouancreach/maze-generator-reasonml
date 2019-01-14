@@ -3,13 +3,15 @@ type t = {
   board,
   curr: Point.t,
   stack: Stack.t(Point.t),
+  preview: bool,
 };
 
-let make = (~curr=(0, 0), cols: int, rows: int): t => {
+let make = (~curr=(0, 0), ~preview=true, cols: int, rows: int): t => {
   {
     board: ArrayLabels.make_matrix(~dimx=rows, ~dimy=cols, Cell.defaultCell),
     curr,
     stack: Stack.create(),
+    preview,
   };
 };
 
@@ -121,6 +123,8 @@ let rec generator = (board: t, cols: int, rows: int): (t, bool) => {
       board
       ->removeWall(board.curr, dirCurrent)
       ->removeWall(choosenNeighbour, dirChoosen);
-    ({...board, curr: choosenNeighbour}, false);
+    board.preview ?
+      ({...board, curr: choosenNeighbour}, false) :
+      generator({...board, curr: choosenNeighbour}, cols, rows);
   };
 };

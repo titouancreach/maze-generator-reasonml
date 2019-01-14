@@ -14,6 +14,7 @@ type state = {
   fps: int,
   totalTick: int,
   firstRendering: option(float),
+  preview: bool,
 };
 
 type action =
@@ -21,6 +22,7 @@ type action =
   | NumberColChange(string)
   | SpeedChange(string)
   | CellSizeChange(string)
+  | TogglePreview
   | GenerationTick
   | Generate;
 
@@ -40,6 +42,7 @@ let make = _children => {
     fps: 0,
     totalTick: 0,
     firstRendering: None,
+    preview: true,
   },
 
   reducer: (action, state) =>
@@ -58,6 +61,7 @@ let make = _children => {
       })
     | CellSizeChange(n) =>
       ReasonReact.Update({...state, cellSize: int_of_string(n)})
+    | TogglePreview => ReasonReact.Update({...state, preview: !state.preview})
     | GenerationTick =>
       let totalTick = state.totalTick + 1;
       let tickPerSecond =
@@ -100,7 +104,13 @@ let make = _children => {
         {
           ...state,
           isGenerating: true,
-          board: Board.make(state.cols, state.rows, ~curr=(startX, startY)),
+          board:
+            Board.make(
+              state.cols,
+              state.rows,
+              ~curr=(startX, startY),
+              ~preview=state.preview,
+            ),
           currentStackSize: 0,
           maxStackSize: 0,
           fps: 0,
@@ -125,16 +135,13 @@ let make = _children => {
       <h1> {ReasonReact.string("Maze generator")} </h1>
       <div>
         <div>
-          <label htmlFor="number_speed">
-            {ReasonReact.string("Speed (interval between 2 redraw)")}
+          <label htmlFor="preview">
+            {ReasonReact.string("Enable preview")}
             <input
-              id="number_speed"
-              min=0
-              type_="number"
-              value={string_of_int(self.state.speed)}
-              onChange={event =>
-                self.send(SpeedChange(ReactEvent.Form.target(event)##value))
-              }
+              id="preview"
+              type_="checkbox"
+              checked={self.state.preview}
+              onChange={_event => self.send(TogglePreview)}
             />
           </label>
         </div>
@@ -186,35 +193,57 @@ let make = _children => {
             />
           </label>
         </div>
-        <div>
-          <span>
-            {ReasonReact.string(
-               "Completed: "
-               ++ string_of_int(
-                    Board.getPercentageGenerated(
-                      self.state.board,
-                      self.state.cols,
-                      self.state.rows,
-                    ),
-                  )
-               ++ "%",
-             )}
-          </span>
-          <span> {ReasonReact.string("|")} </span>
-          <span>
-            {ReasonReact.string(
-               "Stack size (backtracking): "
-               ++ string_of_int(self.state.currentStackSize)
-               ++ " (max: "
-               ++ string_of_int(self.state.maxStackSize)
-               ++ ")",
-             )}
-          </span>
-          <span> {ReasonReact.string("|")} </span>
-          <span>
-            {ReasonReact.string("fps: " ++ string_of_int(self.state.fps))}
-          </span>
-        </div>
+        {self.state.preview ?
+           <>
+             <div>
+               <label htmlFor="number_speed">
+                 {ReasonReact.string("Speed (interval between 2 redraw)")}
+                 <input
+                   id="number_speed"
+                   min=0
+                   type_="number"
+                   value={string_of_int(self.state.speed)}
+                   onChange={event =>
+                     self.send(
+                       SpeedChange(ReactEvent.Form.target(event)##value),
+                     )
+                   }
+                 />
+               </label>
+             </div>
+             <div>
+               <span>
+                 {ReasonReact.string(
+                    "Completed: "
+                    ++ string_of_int(
+                         Board.getPercentageGenerated(
+                           self.state.board,
+                           self.state.cols,
+                           self.state.rows,
+                         ),
+                       )
+                    ++ "%",
+                  )}
+               </span>
+               <span> {ReasonReact.string("|")} </span>
+               <span>
+                 {ReasonReact.string(
+                    "Stack size (backtracking): "
+                    ++ string_of_int(self.state.currentStackSize)
+                    ++ " (max: "
+                    ++ string_of_int(self.state.maxStackSize)
+                    ++ ")",
+                  )}
+               </span>
+               <span> {ReasonReact.string("|")} </span>
+               <span>
+                 {ReasonReact.string(
+                    "fps: " ++ string_of_int(self.state.fps),
+                  )}
+               </span>
+             </div>
+           </> :
+           ReasonReact.null}
         <div>
           <button
             onClick={_event => self.send(Generate)}
