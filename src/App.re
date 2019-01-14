@@ -145,10 +145,12 @@ let make = _children => {
       } else {
         let direction =
           switch (String.lowercase(x)) {
-          | "z" => Some(Direction.North)
+          | "z"
+          | "w" => Some(Direction.North)
           | "d" => Some(Direction.East)
           | "s" => Some(Direction.South)
-          | "q" => Some(Direction.West)
+          | "q"
+          | "a" => Some(Direction.West)
           | _ => None
           };
         switch (direction) {
@@ -225,6 +227,15 @@ let make = _children => {
             />
           </label>
         </div>
+        {self.state.canPlay ?
+           <div>
+             <span>
+               {ReasonReact.string(
+                  "[play mode] use '(z q s d) or (w a s d)' to move the player around",
+                )}
+             </span>
+           </div> :
+           ReasonReact.null}
         {self.state.preview ?
            <>
              <div>
