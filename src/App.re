@@ -82,7 +82,10 @@ let make = _children => {
           ...state,
           board:
             finished ?
-              Board.setEntranceAndExit(board, state.cols, state.rows) : board,
+              board
+              ->Board.setEntranceAndExit(state.cols, state.rows)
+              ->Board.setPlayer((0, 0)) :
+              board,
           isGenerating: !finished,
           currentStackSize: stackSize,
           maxStackSize,

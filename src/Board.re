@@ -4,14 +4,16 @@ type t = {
   curr: Point.t,
   stack: Stack.t(Point.t),
   preview: bool,
+  player: Point.t,
 };
 
-let make = (~curr=(0, 0), ~preview=true, cols: int, rows: int): t => {
+let make = (~curr=Point.make(0, 0), ~preview=true, cols: int, rows: int): t => {
   {
     board: ArrayLabels.make_matrix(~dimx=rows, ~dimy=cols, Cell.defaultCell),
     curr,
     stack: Stack.create(),
     preview,
+    player: Point.make(0, 0),
   };
 };
 
@@ -40,6 +42,10 @@ let getPercentageGenerated = (board: t, cols: int, rows: int): int => {
 
 let getCell = (board: t, x: int, y: int): Cell.t => {
   ArrayLabels.get(ArrayLabels.get(board.board, y), x);
+};
+
+let getCellFromPoint = (board: t, (x, y): Point.t): Cell.t => {
+  getCell(board, x, y);
 };
 
 let getNeighbours = (cols: int, rows: int, curr: Point.t): list(Point.t) => {
@@ -128,3 +134,41 @@ let rec generator = (board: t, cols: int, rows: int): (t, bool) => {
       generator({...board, curr: choosenNeighbour}, cols, rows);
   };
 };
+
+let playerCanMove = (board: t, direction: Direction.t): bool => {
+  /* borders should be a bitfield instead of boolean, should be easier with a fucking binary mask */
+  switch (direction) {
+  | Direction.West => !getCellFromPoint(board, board.player).west
+  | Direction.East => !getCellFromPoint(board, board.player).east
+  | Direction.North => !getCellFromPoint(board, board.player).north
+  | Direction.South => !getCellFromPoint(board, board.player).south
+  };
+};
+
+let getPlayNextCell = (board: t, direction: Direction.t): Point.t => {
+  let (x, y) = board.player;
+  switch (direction) {
+  | Direction.West => (x + 1, y)
+  | Direction.East => (x - 1, y)
+  | Direction.North => (x, y - 1)
+  | Direction.South => (x, y + 1)
+  };
+};
+
+let removePlayer = (board: t, (x, y): Point.t): t => {
+  let cell = getCell(board, x, y);
+  setCell(board, x, y, {...cell, player: false});
+};
+
+let setPlayer = (board: t, (x, y): Point.t): t => {
+  let cell = getCell(board, x, y);
+  {...setCell(board, x, y, {...cell, player: true}), player: (x, y)};
+};
+
+let playerMove = (board: t, direction: Direction.t): t =>
+  if (playerCanMove(board, direction)) {
+    let nextPosition = getPlayNextCell(board, direction);
+    board->removePlayer(board.player)->setPlayer(nextPosition);
+  } else {
+    board;
+  };
