@@ -104,7 +104,13 @@ let make = _children => {
         {
           ...state,
           isGenerating: true,
-          board: Board.make(state.cols, state.rows, ~curr=(startX, startY)),
+          board:
+            Board.make(
+              state.cols,
+              state.rows,
+              ~curr=(startX, startY),
+              ~preview=state.preview,
+            ),
           currentStackSize: 0,
           maxStackSize: 0,
           fps: 0,

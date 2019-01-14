@@ -123,6 +123,8 @@ let rec generator = (board: t, cols: int, rows: int): (t, bool) => {
       board
       ->removeWall(board.curr, dirCurrent)
       ->removeWall(choosenNeighbour, dirChoosen);
-    ({...board, curr: choosenNeighbour}, false);
+    board.preview ?
+      ({...board, curr: choosenNeighbour}, false) :
+      generator({...board, curr: choosenNeighbour}, cols, rows);
   };
 };
