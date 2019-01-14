@@ -6,6 +6,7 @@ type t = {
   south: bool,
   last: bool,
   first: bool,
+  player: bool,
 };
 
 let defaultCell = {
@@ -16,6 +17,7 @@ let defaultCell = {
   south: true,
   last: false,
   first: false,
+  player: false,
 };
 
 let colorVisited = "#068587";
@@ -23,6 +25,7 @@ let colorLast = "#ED553B";
 let colorFirst = "#F2B134";
 let colorDefault = "#4FB99F";
 let colorWall = "#000";
+let colorPlayer = "#FFF";
 
 let removeWall = (cell: t, dir: Direction.t) => {
   switch (dir) {
@@ -40,6 +43,7 @@ let getStyle = (cell: t, cellSize: int) => {
   let size = string_of_int(cellSize) ++ "px";
   let color =
     switch (cell) {
+    | {player: true} => colorPlayer
     | {last: true} => colorLast
     | {first: true} => colorFirst
     | {visited: true} => colorVisited

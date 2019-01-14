@@ -2,11 +2,11 @@ let component = ReasonReact.statelessComponent("Maze");
 
 let rowContainerStyle = ReactDOMRe.Style.make(~display="flex", ());
 
-let make = (~cellSize, ~board, _children) => {
+let make = (~cellSize, ~board, ~onKeyPress, _children) => {
   ...component,
 
   render: _ => {
-    <div>
+    <div onKeyPress tabIndex=0>
       {ReasonReact.array(
          ArrayLabels.mapi(
            ~f=
