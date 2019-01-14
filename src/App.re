@@ -231,7 +231,7 @@ let make = _children => {
            <div>
              <span>
                {ReasonReact.string(
-                  "[play mode] use '(z q s d) or (z a s d)' to move the player around",
+                  "[play mode] use '(z q s d) or (w a s d)' to move the player around",
                 )}
              </span>
            </div> :
