@@ -148,8 +148,8 @@ let playerCanMove = (board: t, direction: Direction.t): bool => {
 let getPlayNextCell = (board: t, direction: Direction.t): Point.t => {
   let (x, y) = board.player;
   switch (direction) {
-  | Direction.West => (x + 1, y)
-  | Direction.East => (x - 1, y)
+  | Direction.West => (x - 1, y)
+  | Direction.East => (x + 1, y)
   | Direction.North => (x, y - 1)
   | Direction.South => (x, y + 1)
   };
